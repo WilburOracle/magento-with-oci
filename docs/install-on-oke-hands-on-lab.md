@@ -175,7 +175,7 @@ b) Magento初始化比较久，可以等个10分钟（2OCPU情况下），也可
 kubectl get pod
 # 用PodName查看日志
 kubectl logs 上一步查到的PodName
-# Magento初始化比较久，等到出现下图的“Starting Apache ** ”，然后再等1分钟就可以打开页面了
+# Magento初始化比较久，等到出现下图的“Command line: '/opt/bitnami/apache/bin/httpd -f /opt/bitnami/apache/conf/httpd.conf -D FOREGROUND'”，然后可以打开页面了
 ```
 ![image-20211206141636272](install-on-oke.assets/image-20211206141636272.png)
 

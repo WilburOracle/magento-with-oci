@@ -5,6 +5,7 @@ kind: Deployment
 metadata:
   name: magento
 spec:
+  replicas: 2
   selector:
     matchLabels:
       app: magento
@@ -49,7 +50,7 @@ spec:
         volumeMounts:
         - name: magento-persistent-data
           mountPath: /bitnami/magento
-          subPath: magento/data
+          subPath: magentoData
       volumes:
       # 使用共享存储
       - name: magento-persistent-data
