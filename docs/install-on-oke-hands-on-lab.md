@@ -175,22 +175,40 @@ b) Magento初始化比较久，可以等个10分钟（2OCPU情况下），也可
 kubectl get pod
 # 用PodName查看日志
 kubectl logs 上一步查到的PodName
-# Magento初始化比较久，等到出现下图的“Command line: '/opt/bitnami/apache/bin/httpd -f /opt/bitnami/apache/conf/httpd.conf -D FOREGROUND'”，然后可以打开页面了
+# Magento初始化比较久，下图中可以看到初始化用了15分钟，耗时在把PHP网站文件拷贝到PVC网盘中	。等到出现下图的“Command line: '/opt/bitnami/apache/bin/httpd -f /opt/bitnami/apache/conf/httpd.conf -D FOREGROUND'”，然后可以打开页面了。
 ```
 ![image-20211206141636272](install-on-oke.assets/image-20211206141636272.png)
 
-c)  【可选步骤】1个magento POD初始化完成后，可以扩展成2个POD
+#### Step 3.【可选步骤】扩展magento POD数量
+
+ 初始化时只需要1个POD，初始化完成后可以扩展成N个POD。如果您还需要做 **7. 进阶学习 ** 的内容，则建议本步骤放到最后去做。
+
+本步骤忽略不做也是能用的，本步骤用于学习在业务爆发时，如何扩展服务。 
+
+```shell
+sed -i 's/replicas:\ 1/replicas:\ 2/g' magento-deploy.yaml
+cat magento-deploy.yaml |grep replicas
+kubectl apply -f magento-deploy.yaml
+```
+
+![image-20220113225030024](install-on-oke-hands-on-lab.assets/image-20220113225030024.png)
 
 # 6. 安装成功，看效果
+因为还没安装测试数据，所以内容看起来空荡荡的（***7.1*** 添加了测试数据，届时首页会有很多商品信息能用于购买）。
+
+#### step 1. 前端 
+
 用浏览器访问  ***5.2.1*** 中的地址，如果用了DNS，则可以使用域名访问。
+
+![image-20220113225220458](install-on-oke-hands-on-lab.assets/image-20220113225220458.png)
+
+#### step 2. 管理后台
 
 管理地址为前端地址接上/admin, 如 http://magento.oracle-work.com/admin，其中用户名为**user**， 密码为**bitnami1**
 
+![image-20220113225355038](install-on-oke-hands-on-lab.assets/image-20220113225355038.png)
+
 下面的截图为（***7.1***）添加了测试数据 后的截图，没执行***7.1***前看不到商品和分类数据。
-
-![image-20211206151016655](install-on-oke.assets/image-20211206151016655.png)
-
-![image-20211206151142884](install-on-oke.assets/image-20211206151142884.png)
 
 
 # 7.  进阶学习
@@ -198,39 +216,50 @@ c)  【可选步骤】1个magento POD初始化完成后，可以扩展成2个POD
 ## 7.1 添加测试数据
 等Magento可以访问后，登录任意一台Node，执行以下命令
 ```shell
-#当前用户为默认的opc用户
-mkdir /home/opc/tmp
-#sudo mount -o nosuid,resvport 上图中的IP:上图中的路径 /home/opc/abc
-sudo mount -o nosuid,resvport 10.0.10.48:/FileSystem-Wilbur /home/opc/tmp
-sudo mkdir -p  /home/opc/tmp/magento/data/tools
-cd /home/opc/tmp/magento/data/tools
-sudo wget https://codeload.github.com/magento/magento2-sample-data/zip/refs/heads/2.4-develop 
-sudo unzip 2.4-develop
-```
-在本地CMD中，登录Magento Pod，执行安装测试数据步骤
-```shell
+#下载测试数据
+mkdir tools
+cd tools
+wget https://codeload.github.com/magento/magento2-sample-data/zip/refs/heads/2.4-develop -O magento-data.zip
+unzip magento-data.zip
+cd ../
+#找到Magento的Pod
 kubectl get pod 
-kubectl exec -ti 上面命令中显示的magento的PodName  /bin/sh
 
+#把压缩包拷贝到POD中
+kubectl cp tools 任意Magento_Pod的名称:/bitnami/magento/tools
+
+#找到Magento Pod，执行安装测试数据步骤
+kubectl exec -ti 上面命令中显示的magento的PodName  /bin/sh
+```
+
+登录Magento Pod，执行安装测试数据步骤
+```shell
 #进入Magento Pod后，执行已下命令
 cd /bitnami/magento/tools
 php -f magento2-sample-data-2.4-develop/dev/tools/build-sample-data.php -- --ce-source="/bitnami/magento"
 cd magento2-sample-data-2.4-develop
-chown -R daemon:root /bitnami/magento/tools/magento2-sample-data-2.4-develop
+chown -R daemon:root /bitnami/magento/tools
 find . -type d -exec chmod g+ws {} +
 cd /bitnami/magento
 php bin/magento setup:upgrade
-chown -R daemon:root /bitnami/magento/
 rm -rf var/cache/* var/page_cache/* generated/*
+chown -R daemon:root /bitnami/magento/
 
-#先别退出，下面继续在Pod中配置缓存
+#先别退出Pod，下面7.2 继续在Pod中配置缓存
 ```
+![image-20211206151016655](install-on-oke.assets/image-20211206151016655.png)
+
+![image-20211206151142884](install-on-oke.assets/image-20211206151142884.png)
+
 ## 7.2 配置Redis缓存
-1. 进入上面提到的Magento Pod，先配置默认缓存
+a) 进入上面提到的Magento Pod，先配置默认缓存
+
 ```shell
+cd /bitnami/magento
 bin/magento setup:config:set --cache-backend=redis --cache-backend-redis-server=redis --cache-backend-redis-db=0
 ```
-2. 接着配置Session缓存。
+b) 接着配置Session缓存。
+
 ```shell
 bin/magento setup:config:set --session-save=redis --session-save-redis-host=redis --session-save-redis-db=1
 #上面的命令会提示是否覆盖原配置（Bitnami制造的镜像使用Vanish作为后端缓存），输入Y
@@ -238,16 +267,17 @@ bin/magento setup:config:set --session-save=redis --session-save-redis-host=redi
 
 #先别退出，下面继续在这里配置RabbitMQ队列
 ```
-来试试效果吧，登录一下电商管理员后台和刷新电商首页、商品页，看看Redis中有什么
-![image-20211206165244156](install-on-oke.assets/image-20211206165244156.png)
-![image-20211206165411298](install-on-oke.assets/image-20211206165411298.png)
-
-进入Magento管理员后台==>System==>Tools==>Cache Management，可以看到Magento缓存的种类及状态
+c)  进入Magento管理员后台==>System==>Tools==>Cache Management，可以看到Magento缓存的种类及状态.在这个页面可以刷新各种缓存。
 
 ![image-20211207101708143](install-on-oke.assets/image-20211207101708143.png)
 
+d) 【新手可以跳过此步骤，直接到**7.3**】来试试效果吧，登录一下电商管理员后台和刷新电商首页、商品页，看看Redis中有什么
+![image-20211206165244156](install-on-oke.assets/image-20211206165244156.png)
+
+![image-20211206165411298](install-on-oke-hands-on-lab.assets/image-20211206165411298.png)
+
 ## 7.3 配置RabbitMQ队列
-1. 进入Rabbit MQ的Pod，添加MQ的用户名和密码
+#### step 1. 进入Rabbit MQ的Pod，添加MQ的用户名和密码
 
 ```shell
 kubectl exec -ti rabbitmq-0 /bin/sh
@@ -257,40 +287,39 @@ rabbitmqctl add_user magento magento
 rabbitmqctl set_permissions -p / magento ".*" ".*" ".*"  
 #修改用户角色
 rabbitmqctl set_user_tags magento administrator 
+exit
 ```
 
-1. 进入Node0,  配置env.php
+#### step 2. 进入Magento Pod
 
 ```shell
-cd /home/opc/tmp/magento/data/app/etc/
-sudo cp env.php env.php.bak
-sudo vim /bitnami/magento/app/etc/env.php
+kubectl get pod 
+#找到Magento Pod，把文本编辑器拷贝到Pod中
+kubectl cp /bin/vi 上面命令中显示的magento的PodName:/bin/vi
+#进入Pod
+kubectl exec -ti 上面命令中显示的magento的PodName  /bin/sh
+
 ```
-2. 修改“queue”配置
-```php
-'queue' =>
-  array (
-    'amqp' =>
-    array (
-      'host' => 'rabbitmq',
-      'port' => '5672',
-      'user' => 'magento',
-      'password' => 'magento',
-      'virtualhost' => '/'
-     ),
-  ),
+#### step 3. 替换配置
+
+```shell
+cd /bitnami/magento/app/etc
+cp env.php env.php.bak
+#修改“queue”配置
+sed -i "s/'consumers_wait_for_messages' => 1/'amqp'=>array('host'=>'rabbitmq','port'=>'5672','user'=>'magento','password'=>'magento','virtualhost'=>'\/')/g" env.php
 ```
+
+
+
 修改前：
 ![image-20211206173056008](install-on-oke.assets/image-20211206173056008.png)
 修改后：
 ![image-20211206181307562](install-on-oke.assets/image-20211206181307562.png)
 
-3. 在Magento Pod中重新加载配置，如果之前没退出，则忽略进入的步骤
+#### step 4. 进入Magento Pod，重新加载配置
+
 ```shell
-kubectl exec -ti 上面命令中显示的magento的PodName  /bin/sh
-```
-4. 进入pod后，重新加载配置
-```shell
+cd /bitnami/magento
 bin/magento setup:upgrade
 chown -R daemon:root /bitnami/magento/
 ```
@@ -347,3 +376,12 @@ K8s会自动创建防火墙，有问题可以通过本方法查看
 ![image-20220113171257166](install-on-oke-hands-on-lab.assets/image-20220113171257166.png)
 
 ![image-20220113171350439](install-on-oke-hands-on-lab.assets/image-20220113171350439.png)
+
+
+
+## 8.3 WorkNode强制重启后，Mysql数据库中用户和Scheme都不见了 
+
+sehubjapacprod 的 OKE Mysql 过夜后node被关机，早上被重启，mysql可能会飘到其他node上，则造成了数据丢失。重新执行一次 **5.1.step3** 和 **5.1.step4** 。
+
+
+
