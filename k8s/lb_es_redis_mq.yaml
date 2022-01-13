@@ -1,0 +1,45 @@
+#------------------------lb_es-------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: lb-es
+spec:
+  type: LoadBalancer
+  ports:
+   - port: 9200
+     targetPort: 9200
+     name: lb-es-9200
+   - port: 9300
+     targetPort: 9300
+     name: lb-es-9300
+  selector:
+    app: es
+---
+#------------------------lb_mq-------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: lb-mq
+spec:
+  type: LoadBalancer
+  ports:
+    - name: lb-rabbitmq-amqpamqp
+      port: 5672
+    - name: lb-rabbitmq-http
+      port: 15672
+  selector:
+    app: rabbitmq
+---
+#------------------------lb_redis-------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: lb-redis
+spec:
+  type: LoadBalancer
+  ports:
+   - port: 6379
+     targetPort: 6379
+  selector:
+    app: redis
+---
