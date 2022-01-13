@@ -31,7 +31,7 @@ spec:
         - name: MAGENTO_ELASTICSEARCH_HOST
           value: "es"
         - name: MAGENTO_DATABASE_HOST
-          value: "10.0.10.69"
+          value: "mysql"
         - name: MAGENTO_DATABASE_NAME
           value: "bitnami_magento"
         - name: MAGENTO_DATABASE_USER
