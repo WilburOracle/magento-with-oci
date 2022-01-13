@@ -42,6 +42,9 @@ spec:
             cpu: "0.1"
             memory: "100Mi"
         imagePullPolicy: IfNotPresent
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "Oracle@123"
         # 应用的内部端口
         ports:
         - containerPort: 3306

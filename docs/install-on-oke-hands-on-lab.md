@@ -44,7 +44,7 @@ c). 等待几分钟，直到OKE状态为Active。
 kubectl get node
 ```
 
-![image-20220113180104529](install-on-oke-hands-on-lab.assets/image-20220113180104529.png)
+![image-20220113180451774](install-on-oke-hands-on-lab.assets/image-20220113180451774.png)
 
 ## 3.2  创建 File Storage
 
@@ -72,8 +72,8 @@ a) 打开 **OCI**==>**Storage**==>**File System**, 点击 **Create File System**
 ####  step 2. 下载脚本
 ```shell
 # 下载安装脚本
-git clone https://github.com/WilburOracle/magento-with-oci.git
-cd magento/docs/yaml
+git clone -b hands-on-lab https://github.com/WilburOracle/magento-with-oci.git
+cd magento-with-oci/k8s
 ```
 
 
