@@ -5,7 +5,7 @@ metadata:
   name: oci-fss
 provisioner: oracle.com/oci-fss
 parameters:
-  mntTargetId: ocid1.mounttarget.oc1.ap_tokyo_1.aaaaaa4np2s2nsnenzzhillqojxwiotboawxi33lpfxs2mjnmfsc2mia
+  mntTargetId: ocid1.mounttarget.oc1.ap_tokyo_1.aaaaaa4np2s3utmynzzhillqojxwiotboawxi33lpfxs2mjnmfsc2mia
 ---
 
 # ------------------------定义pv -----------------------
@@ -23,7 +23,7 @@ spec:
   - nosuid
  nfs:
 # Replace this with the IP of your FSS file system in OCI
-  server: 10.0.10.48
+  server: 10.0.10.3
 # Replace this with the Path of your FSS file system in OCI
   path: "/FileSystem-Wilbur"
   readOnly: false

@@ -1,5 +1,5 @@
 # 1. 说明
-本教程使用OCI的 OKE + File Storage 搭建Magento。在搭建的过程中，OKE会自动创建OCI的 VPC 、 LoadBancers 等资源。
+本教程使用OCI的 OKE + File Storage 搭建Magento。在搭建的过程中，OKE会自动创建OCI的 VCN 、 LoadBancers 等资源。
 
 本教程用于Hands-on Lab，对一些内容进行了调整，比如将OCI mysql 更换为了自行在OKE中安装Mysql，有比如所有命令均更换为在Oracle Cloud Shell进行执行
 
@@ -62,7 +62,7 @@ a) 打开 **OCI**==>**Storage**==>**File System**, 点击 **Create File System**
 
 打开刚创建File System，等File System 的状态为Active后， 创建Mount Target， 记得填写 Export Information的 Export Path（相对于网盘的路径，后续我们将在这个路径中放Magento的文件）和 Mount Target Information的名称（随意）。
 
-![image-20220113173614366](install-on-oke-hands-on-lab.assets/image-20220113173614366.png)
+![image-20220113190920732](install-on-oke-hands-on-lab.assets/image-20220113190920732.png)
 
 ![image-20220113174243147](install-on-oke-hands-on-lab.assets/image-20220113174243147.png)
 
@@ -81,8 +81,20 @@ cd magento-with-oci/k8s
 ## 5.1 安装Mysql
 #### step1.  在K8s中安装Mysql
 
+```shell
+kubectl apply -f mysql.yaml
+```
 
 #### step 2. 连接Mysql
+
+等待1分钟作用，等Mysql公网IP分配完成后，用mysql.yaml中配置的默认密码登录Mysql
+
+```shell
+kubectl get svc
+mysql -h 公网Ip -u root -pOracle@123
+```
+
+![image-20220113184558352](install-on-oke-hands-on-lab.assets/image-20220113184558352.png)
 
 
 #### step 3. 创建数据库
@@ -95,16 +107,15 @@ CREATE DATABASE `bitnami_magento`CHARACTER SET utf8mb4;
 
 ```sql
 create user 'cwb'@'%' identified WITH mysql_native_password  by  'Oracle@123' PASSWORD EXPIRE NEVER;
-grant all privileges on *.* to 'cwb'@'%' with grant option
+grant all privileges on *.* to 'cwb'@'%' with grant option;
 flush privileges;
+exit;
 ```
 
 ## 5.2 部署Magento
 ### 5.2.1 生成Magento的访问地址
 ```shell
 kubectl apply -f magento-service.yaml
-#查看IP
-kubectl get svc
 ```
 
 ### 5.2.2 修改脚本
@@ -118,7 +129,15 @@ kubectl get svc
 ![image-20220113174947577](install-on-oke-hands-on-lab.assets/image-20220113174947577.png)
 
 #### step 3. 修改 magento.yaml中的访问地址信息
-替换magento-deploy.yaml中的MAGENTO_HOST环境变量为 ***5.2.1*** 中查到的公网IP地址（如果有域名，最好使用域名形式）
+
+替换magento-deploy.yaml中的MAGENTO_HOST环境变量为 ***5.2.1*** 中生成的公网IP地址（如果有域名，最好使用域名形式）
+
+```shell
+#查看IP
+kubectl get svc
+```
+
+
 ![image-20211206141344954](install-on-oke.assets/image-20211206141344954.png)
 
 ### 5.2.3.   部署PVC、Nosql DB 及 Magento
@@ -136,17 +155,22 @@ kubectl apply -f redis.yaml
 #创建rabbitmq
 kubectl apply -f rabbitmq.yaml
 
-#创建Varnish
-#kubectl apply -f varnish.yaml
-
+#查看Pod
+kubectl get pod
 ```
-#### step 2. 部署magento
-先等1分钟，让ES、Redis、RabbitMQ创建成功
-再创建Mogento
+![image-20220113185338500](install-on-oke-hands-on-lab.assets/image-20220113185338500.png)
 
+**先等2分钟**，让ES、Redis、RabbitMQ创建成功并完成初始化 (Running 并不代表初始化成功了)
+
+#### step 2. 部署magento
+a)  部署Magento
 ```shell
 #部署Magento
 kubectl apply -f magento-deploy.yaml
+```
+b) Magento初始化比较久，可以等个10分钟（2OCPU情况下），也可以通过下面的方法看什么时候初始化完了
+
+```shell
 # 查看Pod，拿到Magento的PodName
 kubectl get pod
 # 用PodName查看日志

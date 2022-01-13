@@ -51,7 +51,7 @@ spec:
           mountPath: /bitnami/magento
           subPath: magento/data
       volumes:
-      # 使用本地存储
+      # 使用共享存储
       - name: magento-persistent-data
         persistentVolumeClaim:
           claimName: pvc-wilbur
