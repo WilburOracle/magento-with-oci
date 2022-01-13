@@ -179,6 +179,8 @@ kubectl logs 上一步查到的PodName
 ```
 ![image-20211206141636272](install-on-oke.assets/image-20211206141636272.png)
 
+c)  【可选步骤】1个magento POD初始化完成后，可以扩展成2个POD
+
 # 6. 安装成功，看效果
 用浏览器访问  ***5.2.1*** 中的地址，如果用了DNS，则可以使用域名访问。
 
