@@ -4,10 +4,10 @@
 本教程用于Hands-on Lab，对一些内容进行了调整，比如将OCI mysql 更换为了自行在OKE中安装Mysql，有比如所有命令均更换为在Oracle Cloud Shell进行执行
 
 下面是Lab的架构图
-![image-20211206162028840](install-on-oke.assets/image-20211206162028840.png)
+![image-20220114192732155](install-on-oke-hands-on-lab.assets/image-20220114192732155.png)
 
 # 2. 准备工具
-准备OCI的账号及权限。已有账号可以忽略本步骤，没有则见 [创建区间/用户/组/策略] (https://github.com/WilburOracle/oracle-cloud-infrastructure-tutorial/tree/main/oci-iam-tutorial)。 若有权限问题，参考 [OKE说明](https://github.com/WilburOracle/oracle-cloud-infrastructure-tutorial/tree/main/oci-oke-tutorial)中的第一步，里面有OKE所需的Policy。
+准备OCI的账号及权限。已有账号可以忽略本步骤，没有则见 [创建区间/用户/组/策略](https://github.com/WilburOracle/oracle-cloud-infrastructure-tutorial/tree/main/oci-iam-tutorial)。 若有权限问题，参考 [OKE说明](https://github.com/WilburOracle/oracle-cloud-infrastructure-tutorial/tree/main/oci-oke-tutorial)中的第一步，里面有OKE所需的Policy。
 
 # 3. 新建云资源
 ## 3.1 创建OKE
@@ -21,8 +21,6 @@ b).  OKE配置：在默认的基础上，改个名字方便识别，修改规格
 ![image-20220113170757228](install-on-oke-hands-on-lab.assets/image-20220113170757228.png)
 
 ![image-20220113170452132](install-on-oke-hands-on-lab.assets/image-20220113170452132.png)
-
-![image-20220113170218273](install-on-oke-hands-on-lab.assets/image-20220113170218273.png
 
 ![image-20220113170338782](install-on-oke-hands-on-lab.assets/image-20220113170338782.png)
 
